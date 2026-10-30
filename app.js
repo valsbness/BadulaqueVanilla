@@ -12,7 +12,7 @@ const KEY='badulaque_vanilla_v1';
 let db=JSON.parse(localStorage.getItem(KEY)||'{"products":[],"sales":[],"events":[],"dailyClosings":[]}');
 db.dailyClosings ||= []; db.sales ||= []; db.products ||= []; db.events ||= [];
 let profile=JSON.parse(localStorage.getItem('badulaque_vanilla_profile')||'{"name":"Mi perfil","photo":""}');
-let selectedEvent=null,calcValue='0',calcStored=null,calcOp=null,calcFresh=false,wheelRotation=0;
+let selectedEvent=null,pendingDeleteEvent=null,calcValue='0',calcStored=null,calcOp=null,calcFresh=false,wheelRotation=0;
 const money=n=>new Intl.NumberFormat('es-PA',{style:'currency',currency:'USD'}).format(Number(n)||0);
 const save=()=>{localStorage.setItem(KEY,JSON.stringify(db));renderAll();syncCloud()};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -22,6 +22,9 @@ $$('.nav').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 $$('[data-go]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.go)));
 $$('[data-close]').forEach(b=>b.addEventListener('click',()=>$('#'+b.dataset.close).classList.add('hidden')));
 $('#today').textContent=new Intl.DateTimeFormat('es-PA',{dateStyle:'full'}).format(new Date());
+$('#cancel-delete-event').onclick=()=>{pendingDeleteEvent=null;$('#confirm-delete-modal').classList.add('hidden')};
+$('#confirm-delete-modal').addEventListener('click',e=>{if(e.target.id==='confirm-delete-modal'){$('#cancel-delete-event').click()}});
+$('#confirm-delete-event').onclick=()=>{if(!pendingDeleteEvent)return;const id=pendingDeleteEvent;pendingDeleteEvent=null;db.events=db.events.filter(x=>x.id!==id);if(selectedEvent===id)selectedEvent=db.events.at(-1)?.id||null;$('#confirm-delete-modal').classList.add('hidden');save();toast('Sorteo eliminado ♡')};
 $('#event-image').addEventListener('change',e=>{$('#event-file-name').textContent=e.target.files[0]?.name||'Ningún archivo seleccionado'});
 function renderAll(){renderDashboard();renderProducts();renderEvents();renderDaily()}
 function renderProfile(){const name=profile.name||'Mi perfil',avatar=profile.photo?`<img src="${profile.photo}" alt="Foto de perfil">`:esc(name.trim().charAt(0).toUpperCase()||'♡');$('#profile-name').textContent=name;$('#profile-avatar').innerHTML=avatar;$('#profile-preview').innerHTML=avatar;$('#profile-name-input').value=name}
@@ -97,7 +100,7 @@ function renderEvents(){
  $('#event-list').classList.toggle('empty',!db.events.length);
  $('#event-list').innerHTML=db.events.length?db.events.slice().reverse().map(ev=>{const n=(ev.participants||[]).reduce((a,p)=>a+p.quantity,0);return `<div class="raffle-event-card ${ev.id===selectedEvent?'selected':''}" data-event="${ev.id}"><button class="raffle-event-select" type="button" data-select-event="${ev.id}"><span class="raffle-event-thumb">${ev.image?`<img src="${ev.image}" alt="">`:'🎁'}</span><span class="raffle-event-copy"><b>${esc(ev.title)}</b><small>${esc(ev.prize)}</small><em>${n} participaciones · ${(ev.winners|| (ev.winner?[ev.winner]:[])).length} ganadores</em></span></button><button class="raffle-delete" type="button" data-delete-event="${ev.id}" title="Eliminar sorteo" aria-label="Eliminar sorteo">×</button></div>`}).join(''):'Todavía no hay sorteos. ¡Crea el primero!';
  $('#event-list').querySelectorAll('[data-select-event]').forEach(b=>b.onclick=()=>{selectedEvent=b.dataset.selectEvent;renderEvents()});
- $('#event-list').querySelectorAll('[data-delete-event]').forEach(b=>b.onclick=()=>{const ev=db.events.find(x=>x.id===b.dataset.deleteEvent);if(!ev)return;if(confirm('¿Eliminar el sorteo "'+ev.title+'" y todos sus participantes y ganadores? Esta acción no se puede deshacer.')){db.events=db.events.filter(x=>x.id!==ev.id);if(selectedEvent===ev.id)selectedEvent=db.events.at(-1)?.id||null;save();toast('Sorteo eliminado')}}); 
+ $('#event-list').querySelectorAll('[data-delete-event]').forEach(b=>b.onclick=()=>{const ev=db.events.find(x=>x.id===b.dataset.deleteEvent);if(!ev)return;pendingDeleteEvent=ev.id;$('#confirm-delete-title').textContent='¿Eliminar este sorteo?';$('#confirm-delete-message').textContent=`¿Eliminar “${ev.title}” y todos sus participantes y ganadores? Esta acción no se puede deshacer.`;$('#confirm-delete-modal').classList.remove('hidden')}); 
  const ev=currentEvent(),count=ev?(ev.participants||[]).reduce((a,p)=>a+p.quantity,0):0;
  $('#selected-event-label').textContent=ev?`${ev.title} · Premio: ${ev.prize}`:'Selecciona un sorteo';
  $('#add-participant').disabled=!ev;$('#spin-button').disabled=drawing||!ev||!count;
