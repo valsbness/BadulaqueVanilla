@@ -1,11 +1,20 @@
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const $=s=>document.querySelector(s), $=s=>[...document.querySelectorAll(s)];
+
+const SUPABASE_URL='https://okxdhbteqgjwjugwuljm.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_hfDtRFUYMR3TonqbFHQ7dg_ZPSXPb4M';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+let cloudUser=null,cloudReady=false,cloudWriteQueue=Promise.resolve();
+async function syncCloud(){if(!cloudUser||!cloudReady)return;const payload={user_id:cloudUser.id,data:db,profile,updated_at:new Date().toISOString()};cloudWriteQueue=cloudWriteQueue.then(()=>supabaseClient.from('vanilla_store_data').upsert(payload,{onConflict:'user_id'})).then(({error})=>{if(error){console.error('Supabase save:',error);toast('No se pudo sincronizar. Revisa tu conexión.')}});return cloudWriteQueue}
+async function loadCloudForUser(user){cloudUser=user;cloudReady=false;const {data,error}=await supabaseClient.from('vanilla_store_data').select('data,profile').eq('user_id',user.id).maybeSingle();if(error){console.error(error);$('#auth-message').textContent='Error al cargar la tienda: '+error.message;return false}if(data){db={...{products:[],sales:[],events:[],dailyClosings:[]},...(data.data||{})};profile=data.profile||{name:'Mi perfil',photo:''};localStorage.setItem(KEY,JSON.stringify(db));localStorage.setItem('badulaque_vanilla_profile',JSON.stringify(profile))}else{const {error:insertError}=await supabaseClient.from('vanilla_store_data').insert({user_id:user.id,data:db,profile});if(insertError){console.error(insertError);$('#auth-message').textContent='No se pudo migrar la información: '+insertError.message;return false}}cloudReady=true;$('#auth-gate').style.display='none';renderAll();renderProfile();return true}
+async function initCloudAuth(){$('#auth-form').addEventListener('submit',async e=>{e.preventDefault();const email=$('#auth-email').value.trim(),password=$('#auth-password').value;$('#auth-message').textContent='Conectando…';$('#auth-submit').disabled=true;const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});$('#auth-submit').disabled=false;if(error){$('#auth-message').textContent=error.message;return}if(data.user)await loadCloudForUser(data.user)});$('#auth-signup').addEventListener('click',async()=>{const email=$('#auth-email').value.trim(),password=$('#auth-password').value;if(!email||password.length<6){$('#auth-message').textContent='Escribe tu correo y una contraseña de al menos 6 caracteres.';return}$('#auth-message').textContent='Creando cuenta…';const {data,error}=await supabaseClient.auth.signUp({email,password});if(error){$('#auth-message').textContent=error.message;return}if(data.session&&data.user)await loadCloudForUser(data.user);else $('#auth-message').textContent='Cuenta creada. Revisa tu correo para confirmar y luego inicia sesión.'});const {data:{session}}=await supabaseClient.auth.getSession();if(session?.user)await loadCloudForUser(session.user)}
+
 const KEY='badulaque_vanilla_v1';
 let db=JSON.parse(localStorage.getItem(KEY)||'{"products":[],"sales":[],"events":[],"dailyClosings":[]}');
 db.dailyClosings ||= []; db.sales ||= []; db.products ||= []; db.events ||= [];
 let profile=JSON.parse(localStorage.getItem('badulaque_vanilla_profile')||'{"name":"Mi perfil","photo":""}');
 let selectedEvent=null,calcValue='0',calcStored=null,calcOp=null,calcFresh=false,wheelRotation=0;
 const money=n=>new Intl.NumberFormat('es-PA',{style:'currency',currency:'USD'}).format(Number(n)||0);
-const save=()=>{localStorage.setItem(KEY,JSON.stringify(db));renderAll()};
+const save=()=>{localStorage.setItem(KEY,JSON.stringify(db));renderAll();syncCloud()};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 function showPage(name){$$('.page').forEach(p=>p.classList.toggle('active',p.id===name));$$('.nav').forEach(b=>b.classList.toggle('active',b.dataset.page===name));$('#page-title').textContent=({dashboard:'Resumen',calculator:'Mostrador',daily:'Cierre diario',inventory:'Inventario',events:'Eventos y ruleta'})[name]}
@@ -20,7 +29,7 @@ function openProfile(){renderProfile();$('#profile-backdrop').classList.remove('
 $('#profile-edit').onclick=openProfile;$('#profile-close').onclick=()=>$('#profile-backdrop').classList.add('hidden');$('#profile-backdrop').addEventListener('click',e=>{if(e.target.id==='profile-backdrop')e.currentTarget.classList.add('hidden')});
 $('#profile-photo').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;if(!file.type.startsWith('image/'))return toast('Selecciona una imagen válida');if(file.size>1.2*1024*1024){e.target.value='';return toast('La foto debe pesar menos de 1.2 MB')};const reader=new FileReader();reader.onload=()=>{profile.photo=reader.result;renderProfile();$('#profile-file-name').textContent=file.name};reader.readAsDataURL(file)});
 $('#profile-remove-photo').onclick=()=>{profile.photo='';$('#profile-photo').value='';$('#profile-file-name').textContent='Foto eliminada';renderProfile()};
-$('#profile-form').onsubmit=e=>{e.preventDefault();const name=$('#profile-name-input').value.trim();if(!name)return toast('Escribe un nombre para tu perfil');profile.name=name;localStorage.setItem('badulaque_vanilla_profile',JSON.stringify(profile));renderProfile();$('#profile-backdrop').classList.add('hidden');toast('Perfil guardado ♡')};
+$('#profile-form').onsubmit=e=>{e.preventDefault();const name=$('#profile-name-input').value.trim();if(!name)return toast('Escribe un nombre para tu perfil');profile.name=name;localStorage.setItem('badulaque_vanilla_profile',JSON.stringify(profile));syncCloud();renderProfile();$('#profile-backdrop').classList.add('hidden');toast('Perfil guardado ♡')};
 
 function renderDashboard(){
  const today=new Date().toLocaleDateString('en-CA'),sales=db.sales.filter(s=>s.date===today);
@@ -91,6 +100,7 @@ function renderEvents(){
 $('#participant-form').onsubmit=e=>{e.preventDefault();const ev=currentEvent();if(!ev)return;const name=$('#participant-name').value.trim(),phone=$('#participant-phone').value.trim(),quantity=Number($('#participant-quantity').value);if(!Number.isInteger(quantity)||quantity<1||quantity>500)return toast('Cantidad no válida');const old=ev.participants.find(p=>p.name.toLowerCase()===name.toLowerCase()&&p.phone===phone);if(old)old.quantity+=quantity;else ev.participants.push({id:crypto.randomUUID(),name,phone,quantity});$('#participant-form').reset();$('#participant-quantity').value=1;save();toast(`${quantity} participaciones agregadas`)};
 $('#spin-button').onclick=()=>{const ev=currentEvent();if(!ev)return;const tickets=[];ev.participants.forEach(p=>{for(let i=0;i<p.quantity;i++)tickets.push(p)});if(!tickets.length)return;$('#spin-button').disabled=true;$('#winner').classList.add('hidden');const chosen=tickets[Math.floor(Math.random()*tickets.length)];wheelRotation+=1800+Math.floor(Math.random()*720);$('#wheel').style.transform=`rotate(${wheelRotation}deg)`;setTimeout(()=>{ev.winner={name:chosen.name,phone:chosen.phone,at:new Date().toISOString()};save();$('#winner-name').textContent=chosen.name;$('#winner-prize').textContent=`Ganó: ${ev.prize} · ${chosen.phone}`;if(ev.image){$('#winner-image').src=ev.image;$('#winner-image').classList.remove('hidden')}else $('#winner-image').classList.add('hidden');$('#winner-modal').classList.remove('hidden');$('#spin-button').disabled=false},4100)};
 renderAll();renderProfile();
+initCloudAuth();
 
 const themeKey='badulaque_vanilla_theme';
 function applyTheme(theme){document.documentElement.dataset.theme=theme;localStorage.setItem(themeKey,theme);document.querySelectorAll('[data-theme]').forEach(b=>b.classList.toggle('chosen',b.dataset.theme===theme))}
