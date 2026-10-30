@@ -12,10 +12,11 @@ $$('.nav').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 $$('[data-go]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.go)));
 $$('[data-close]').forEach(b=>b.addEventListener('click',()=>$('#'+b.dataset.close).classList.add('hidden')));
 $('#today').textContent=new Intl.DateTimeFormat('es-PA',{dateStyle:'full'}).format(new Date());
+$('#event-image').addEventListener('change',e=>{$('#event-file-name').textContent=e.target.files[0]?.name||'Ningún archivo seleccionado'});
 function renderAll(){renderDashboard();renderProducts();renderEvents();renderDaily()}
 function renderDashboard(){
  const today=new Date().toLocaleDateString('en-CA'),sales=db.sales.filter(s=>s.date===today);
- const revenue=sales.reduce((a,s)=>a+s.total,0),profit=sales.reduce((a,s)=>a+s.profit,0);
+ const latest=db.dailyClosings?.at(-1),revenue=latest?.revenue??sales.reduce((a,s)=>a+s.total,0),profit=latest?.profit??sales.reduce((a,s)=>a+s.profit,0);
  $('#day-sales').textContent=money(revenue);$('#day-profit').textContent=money(profit);
  $('#product-count').textContent=db.products.length;$('#unit-count').textContent=db.products.reduce((a,p)=>a+p.stock,0);
  $('#recent-sales').innerHTML=sales.length?sales.slice().reverse().slice(0,6).map(s=>`<div class="participant"><span>${esc(s.name)} × ${s.qty}</span><b>${money(s.total)}</b></div>`).join(''):'Todavía no hay ventas registradas hoy.';
