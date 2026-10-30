@@ -1,17 +1,18 @@
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const KEY='badulaque_vanilla_v1';
-let db=JSON.parse(localStorage.getItem(KEY)||'{"products":[],"sales":[],"events":[]}');
+let db=JSON.parse(localStorage.getItem(KEY)||'{"products":[],"sales":[],"events":[],"dailyClosings":[]}');
+db.dailyClosings ||= []; db.sales ||= []; db.products ||= []; db.events ||= [];
 let selectedEvent=null,calcValue='0',calcStored=null,calcOp=null,calcFresh=false,wheelRotation=0;
 const money=n=>new Intl.NumberFormat('es-PA',{style:'currency',currency:'USD'}).format(Number(n)||0);
 const save=()=>{localStorage.setItem(KEY,JSON.stringify(db));renderAll()};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
-function showPage(name){$$('.page').forEach(p=>p.classList.toggle('active',p.id===name));$$('.nav').forEach(b=>b.classList.toggle('active',b.dataset.page===name));$('#page-title').textContent=({dashboard:'Resumen',calculator:'Calculadora',inventory:'Inventario',events:'Eventos y ruleta'})[name]}
+function showPage(name){$$('.page').forEach(p=>p.classList.toggle('active',p.id===name));$$('.nav').forEach(b=>b.classList.toggle('active',b.dataset.page===name));$('#page-title').textContent=({dashboard:'Resumen',calculator:'Mostrador',daily:'Cierre diario',inventory:'Inventario',events:'Eventos y ruleta'})[name]}
 $$('.nav').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 $$('[data-go]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.go)));
 $$('[data-close]').forEach(b=>b.addEventListener('click',()=>$('#'+b.dataset.close).classList.add('hidden')));
 $('#today').textContent=new Intl.DateTimeFormat('es-PA',{dateStyle:'full'}).format(new Date());
-function renderAll(){renderDashboard();renderProducts();renderSales();renderEvents()}
+function renderAll(){renderDashboard();renderProducts();renderEvents();renderDaily()}
 function renderDashboard(){
  const today=new Date().toLocaleDateString('en-CA'),sales=db.sales.filter(s=>s.date===today);
  const revenue=sales.reduce((a,s)=>a+s.total,0),profit=sales.reduce((a,s)=>a+s.profit,0);
@@ -24,21 +25,36 @@ function renderProducts(){
  $('#capital').textContent=money(capital);$('#stock-value').textContent=money(stockValue);$('#all-sales').textContent=money(total);
  $('#product-rows').innerHTML=db.products.map(p=>`<tr><td><b>${esc(p.name)}</b></td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td>${p.stock}</td><td><div class="actions"><button class="action" data-edit="${p.id}">Editar</button><button class="action" data-restock="${p.id}">＋ Stock</button><button class="action danger" data-delete="${p.id}">Eliminar</button></div></td></tr>`).join('');
  $('#inventory-empty').classList.toggle('hidden',db.products.length>0);
- $('#sale-product').innerHTML='<option value="">Seleccionar producto</option>'+db.products.map(p=>`<option value="${p.id}" ${p.stock<1?'disabled':''}>${esc(p.name)} (${p.stock} disponibles)</option>`).join('');
  $('#product-rows').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openProduct(b.dataset.edit));
  $('#product-rows').querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{if(confirm('¿Eliminar este producto? El historial de ventas se conserva.')){db.products=db.products.filter(p=>p.id!==b.dataset.delete);save()}});
  $('#product-rows').querySelectorAll('[data-restock]').forEach(b=>b.onclick=()=>{const p=db.products.find(x=>x.id===b.dataset.restock),n=Number(prompt(`¿Cuántas unidades agregar a ${p.name}?`,1));if(Number.isInteger(n)&&n>0){p.stock+=n;save();toast('Inventario actualizado')}});
- updateEstimate();
-}
-function renderSales(){
- $('#sales-history').innerHTML=db.sales.length?'<div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Producto</th><th>Cantidad</th><th>Total</th><th>Ganancia</th></tr></thead><tbody>'+db.sales.slice().reverse().map(s=>`<tr><td>${new Date(s.created).toLocaleString('es-PA')}</td><td>${esc(s.name)}</td><td>${s.qty}</td><td>${money(s.total)}</td><td>${money(s.profit)}</td></tr>`).join('')+'</tbody></table></div>':'Todavía no hay ventas registradas.';
 }
 function openProduct(id){const p=db.products.find(x=>x.id===id);$('#product-form').reset();$('#product-id').value=p?.id||'';$('#product-modal-title').textContent=p?'Editar producto':'Agregar producto';if(p){$('#product-name').value=p.name;$('#product-cost').value=p.cost;$('#product-price').value=p.price;$('#product-stock').value=p.stock}$('#product-modal').classList.remove('hidden')}
 $('#add-product').onclick=()=>openProduct();
 $('#product-form').onsubmit=e=>{e.preventDefault();const id=$('#product-id').value,data={name:$('#product-name').value.trim(),cost:+$('#product-cost').value,price:+$('#product-price').value,stock:+$('#product-stock').value};if(!data.name||data.cost<0||data.price<0||data.stock<0)return;const old=db.products.find(p=>p.id===id);if(old)Object.assign(old,data);else db.products.push({id:crypto.randomUUID(),...data});$('#product-modal').classList.add('hidden');save();toast('Producto guardado')};
-$('#sale-product').onchange=updateEstimate;$('#sale-quantity').oninput=updateEstimate;
-function updateEstimate(){const p=db.products.find(x=>x.id===$('#sale-product').value),q=Number($('#sale-quantity').value)||0;$('#sale-estimate').textContent=money((p?.price||0)*q)}
-$('#sale-form').onsubmit=e=>{e.preventDefault();const p=db.products.find(x=>x.id===$('#sale-product').value),qty=Number($('#sale-quantity').value);if(!p||!Number.isInteger(qty)||qty<1||qty>p.stock)return toast('Revisa el producto y la cantidad disponible');p.stock-=qty;const total=p.price*qty,profit=(p.price-p.cost)*qty;db.sales.push({id:crypto.randomUUID(),productId:p.id,name:p.name,qty,total,profit,date:new Date().toLocaleDateString('en-CA'),created:new Date().toISOString()});$('#sale-quantity').value=1;save();toast('Venta registrada correctamente')};
+
+// Daily cash and inventory snapshots (no per-sale entry required)
+function renderDaily(){
+ const fields=$('#daily-product-fields'); if(!fields)return;
+ const previous=db.dailyClosings.at(-1);
+ fields.innerHTML=db.products.map(p=>{const old=previous?.products?.find(x=>x.id===p.id);const opening=old?old.closing:p.stock;return `<div class="daily-product-row" data-product="${p.id}"><div class="daily-product-name"><b>${esc(p.name)}</b><small>Inicio: ${opening} · Precio: ${money(p.price)}</small></div><label>Repusiste<input type="number" min="0" step="1" value="0" data-restock="${p.id}"></label><label>Quedan<input type="number" min="0" step="1" value="${p.stock}" data-closing="${p.id}"></label></div>`}).join('')||'<p class="empty">Primero agrega tus productos en Inventario.</p>';
+ $('#daily-opening-cash').value=previous?previous.closingCash:'';
+ $('#daily-results').innerHTML=previous?`<div class="panel"><h3>Último cierre · ${new Date(previous.created).toLocaleDateString('es-PA')}</h3><p>Caja registrada: <b>${money(previous.closingCash)}</b> · Diferencia pendiente: <b>${money(previous.unidentified)}</b></p></div>`:'';
+ $('#daily-history').innerHTML=db.dailyClosings.length?db.dailyClosings.slice().reverse().map(x=>`<div class="daily-history-row"><div><b>${new Date(x.created).toLocaleDateString('es-PA')}</b><small>${x.products.reduce((a,p)=>a+p.sold,0)} unidades vendidas estimadas · ${esc(x.note||'Sin notas')}</small></div><div><b>${money(x.closingCash)}</b><small>Diferencia: ${money(x.unidentified)}</small></div></div>`).join(''):'Todavía no hay cierres registrados.';
+}
+$('#daily-form').onsubmit=e=>{
+ e.preventDefault();
+ const previous=db.dailyClosings.at(-1),openingCash=Number($('#daily-opening-cash').value),closingCash=Number($('#daily-closing-cash').value),extraIn=Number($('#daily-extra-in').value)||0,extraOut=Number($('#daily-extra-out').value)||0;
+ if(!Number.isFinite(openingCash)||!Number.isFinite(closingCash)||openingCash<0||closingCash<0)return toast('Revisa los valores de caja');
+ const products=db.products.map(p=>{const old=previous?.products?.find(x=>x.id===p.id),opening=old?old.closing:p.stock,restock=Number($('[data-restock="'+p.id+'"]').value)||0,closing=Number($('[data-closing="'+p.id+'"]').value);if(!Number.isInteger(restock)||restock<0||!Number.isInteger(closing)||closing<0)throw new Error('Revisa las cantidades de '+p.name);const sold=Math.max(0,opening+restock-closing);return {id:p.id,name:p.name,cost:p.cost,price:p.price,opening,restock,closing,sold,revenue:sold*p.price,restockCost:restock*p.cost,profit:sold*(p.price-p.cost)}});
+ const revenue=products.reduce((a,p)=>a+p.revenue,0),restockCost=products.reduce((a,p)=>a+p.restockCost,0),expected=openingCash+revenue+extraIn-restockCost-extraOut,unidentified=closingCash-expected;
+ const entry={id:crypto.randomUUID(),created:new Date().toISOString(),openingCash,closingCash,extraIn,extraOut,revenue,restockCost,expected,unidentified,profit:products.reduce((a,p)=>a+p.profit,0),products,note:$('#daily-note').value.trim()};
+ db.dailyClosings.push(entry);products.forEach(x=>{const p=db.products.find(p=>p.id===x.id);if(p)p.stock=x.closing});
+ save();$('#daily-closing-cash').value='';$('#daily-extra-in').value='0';$('#daily-extra-out').value='0';$('#daily-note').value='';renderDaily();
+ $('#daily-results').innerHTML=`<div class="daily-result-grid"><article><small>Ventas estimadas</small><b>${money(revenue)}</b></article><article><small>Ganancia estimada</small><b>${money(entry.profit)}</b></article><article><small>Reposiciones</small><b>${money(restockCost)}</b></article><article><small>Ingreso sin identificar</small><b>${money(unidentified)}</b><small>Puede incluir pasiva, ajustes u otros movimientos.</small></article></div>`;
+ toast('Cierre diario guardado ♡');
+};
+
 // Calculadora
 function calc(k){if(k==='AC'){calcValue='0';calcStored=null;calcOp=null;calcFresh=false}
 else if(k==='±'){calcValue=String(-Number(calcValue))}
@@ -66,3 +82,13 @@ function renderEvents(){
 $('#participant-form').onsubmit=e=>{e.preventDefault();const ev=currentEvent();if(!ev)return;const name=$('#participant-name').value.trim(),phone=$('#participant-phone').value.trim(),quantity=Number($('#participant-quantity').value);if(!Number.isInteger(quantity)||quantity<1||quantity>500)return toast('Cantidad no válida');const old=ev.participants.find(p=>p.name.toLowerCase()===name.toLowerCase()&&p.phone===phone);if(old)old.quantity+=quantity;else ev.participants.push({id:crypto.randomUUID(),name,phone,quantity});$('#participant-form').reset();$('#participant-quantity').value=1;save();toast(`${quantity} participaciones agregadas`)};
 $('#spin-button').onclick=()=>{const ev=currentEvent();if(!ev)return;const tickets=[];ev.participants.forEach(p=>{for(let i=0;i<p.quantity;i++)tickets.push(p)});if(!tickets.length)return;$('#spin-button').disabled=true;$('#winner').classList.add('hidden');const chosen=tickets[Math.floor(Math.random()*tickets.length)];wheelRotation+=1800+Math.floor(Math.random()*720);$('#wheel').style.transform=`rotate(${wheelRotation}deg)`;setTimeout(()=>{ev.winner={name:chosen.name,phone:chosen.phone,at:new Date().toISOString()};save();$('#winner-name').textContent=chosen.name;$('#winner-prize').textContent=`Ganó: ${ev.prize} · ${chosen.phone}`;if(ev.image){$('#winner-image').src=ev.image;$('#winner-image').classList.remove('hidden')}else $('#winner-image').classList.add('hidden');$('#winner-modal').classList.remove('hidden');$('#spin-button').disabled=false},4100)};
 renderAll();
+
+const themeKey='badulaque_vanilla_theme';
+function applyTheme(theme){document.documentElement.dataset.theme=theme;localStorage.setItem(themeKey,theme);document.querySelectorAll('[data-theme]').forEach(b=>b.classList.toggle('chosen',b.dataset.theme===theme))}
+applyTheme(localStorage.getItem(themeKey)||'natural');
+$('#theme-launch').onclick=()=>$('#theme-backdrop').classList.remove('hidden');
+$('#theme-close').onclick=()=>$('#theme-backdrop').classList.add('hidden');
+$('#theme-backdrop').addEventListener('click',e=>{if(e.target.id==='theme-backdrop')e.currentTarget.classList.add('hidden')});
+$$('[data-theme]').forEach(b=>b.addEventListener('click',()=>applyTheme(b.dataset.theme)));
+const scene=$('#counter-scene');
+if(scene){scene.addEventListener('pointermove',e=>{const r=scene.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;scene.querySelectorAll('[data-float]').forEach((el,i)=>{el.style.setProperty('--mx',x*(i%2?22:-18)+'px');el.style.setProperty('--my',y*(i%2?16:-12)+'px')})});scene.addEventListener('pointerleave',()=>scene.querySelectorAll('[data-float]').forEach(el=>{el.style.setProperty('--mx','0px');el.style.setProperty('--my','0px')}))}
