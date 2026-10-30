@@ -1,14 +1,3 @@
-$('#daily-history').addEventListener('click',e=>{
- const edit=e.target.closest('[data-edit-daily]'),del=e.target.closest('[data-delete-daily]');
- if(del){const idx=db.dailyClosings.findIndex(x=>x.id===del.dataset.deleteDaily);if(idx<0)return;if(!confirm('¿Borrar este registro? Los registros posteriores se recalcularán con sus cantidades guardadas.'))return;db.dailyClosings.splice(idx,1);recalculateDailyFrom(Math.min(idx,db.dailyClosings.length));save();renderDaily();toast('Registro eliminado y cuentas recalculadas');return}
- if(!edit)return;
- const idx=db.dailyClosings.findIndex(x=>x.id===edit.dataset.editDaily);if(idx<0)return;
- const entry=db.dailyClosings[idx],previous=db.dailyClosings[idx-1]||null;editingDailyId=entry.id;
- $('#cash-counted').value=entry.cashCounted??'';
- $('#cash-previous').textContent='Editando registro del '+new Date(entry.created).toLocaleString('es-PA');
- $('#daily-product-fields').innerHTML=db.products.map(p=>{const saved=entry.products.find(x=>x.id===p.id),opening=previous?.products?.find(x=>x.id===p.id)?.closing??saved?.opening??p.stock;return `<div class="daily-product-row"><div class="daily-product-name"><b>${esc(p.name)}</b><small>Existencia anterior: ${opening}</small></div><label>Compraste / re-stock<input type="number" min="0" step="1" value="${saved?.restock??0}" data-restock="${p.id}"></label><label>Quedan ahora<input type="number" min="0" step="1" value="${saved?.closing??0}" data-closing="${p.id}"></label></div>`}).join('');
- $('#daily-note').value=entry.note||'';$('#daily-form button[type="submit"]').textContent='♡ Guardar corrección';$('#daily-form').scrollIntoView({behavior:'smooth',block:'start'});toast('Edita el registro y guarda los cambios');
-});
 function recalculateDailyFrom(start){
  for(let i=start;i<db.dailyClosings.length;i++){
   const entry=db.dailyClosings[i],previous=db.dailyClosings[i-1]||null;
@@ -36,6 +25,18 @@ let selectedEvent=null,pendingDeleteEvent=null,editingDailyId=null,calcValue='0'
 const money=n=>new Intl.NumberFormat('es-PA',{style:'currency',currency:'USD'}).format(Number(n)||0);
 const save=()=>{localStorage.setItem(KEY,JSON.stringify(db));renderAll();syncCloud()};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+$('#daily-history').addEventListener('click',e=>{
+ const edit=e.target.closest('[data-edit-daily]'),del=e.target.closest('[data-delete-daily]');
+ if(del){const idx=db.dailyClosings.findIndex(x=>x.id===del.dataset.deleteDaily);if(idx<0)return;if(!confirm('¿Borrar este registro? Los registros posteriores se recalcularán con sus cantidades guardadas.'))return;db.dailyClosings.splice(idx,1);recalculateDailyFrom(Math.min(idx,db.dailyClosings.length));save();renderDaily();toast('Registro eliminado y cuentas recalculadas');return}
+ if(!edit)return;
+ const idx=db.dailyClosings.findIndex(x=>x.id===edit.dataset.editDaily);if(idx<0)return;
+ const entry=db.dailyClosings[idx],previous=db.dailyClosings[idx-1]||null;editingDailyId=entry.id;
+ $('#cash-counted').value=entry.cashCounted??'';
+ $('#cash-previous').textContent='Editando registro del '+new Date(entry.created).toLocaleString('es-PA');
+ $('#daily-product-fields').innerHTML=db.products.map(p=>{const saved=entry.products.find(x=>x.id===p.id),opening=previous?.products?.find(x=>x.id===p.id)?.closing??saved?.opening??p.stock;return `<div class="daily-product-row"><div class="daily-product-name"><b>${esc(p.name)}</b><small>Existencia anterior: ${opening}</small></div><label>Compraste / re-stock<input type="number" min="0" step="1" value="${saved?.restock??0}" data-restock="${p.id}"></label><label>Quedan ahora<input type="number" min="0" step="1" value="${saved?.closing??0}" data-closing="${p.id}"></label></div>`}).join('');
+ $('#daily-note').value=entry.note||'';$('#daily-form button[type="submit"]').textContent='♡ Guardar corrección';$('#daily-form').scrollIntoView({behavior:'smooth',block:'start'});toast('Edita el registro y guarda los cambios');
+});
+
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 function showPage(name){$$('.page').forEach(p=>p.classList.toggle('active',p.id===name));$$('.nav').forEach(b=>b.classList.toggle('active',b.dataset.page===name));$('#page-title').textContent=({dashboard:'Resumen',calculator:'Mostrador',daily:'Cierre diario',inventory:'Inventario',events:'Eventos y ruleta'})[name]}
 $$('.nav').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
