@@ -57,24 +57,36 @@ $('#product-form').onsubmit=e=>{e.preventDefault();const id=$('#product-id').val
 
 // Daily cash and inventory snapshots (no per-sale entry required)
 function renderDaily(){
- const fields=$('#daily-product-fields'); if(!fields)return;
+ const fields=$('#daily-product-fields');if(!fields)return;
  const previous=db.dailyClosings.at(-1);
- fields.innerHTML=db.products.map(p=>{const old=previous?.products?.find(x=>x.id===p.id);const opening=old?old.closing:p.stock;return `<div class="daily-product-row" data-product="${p.id}"><div class="daily-product-name"><b>${esc(p.name)}</b><small>Inicio: ${opening} · Precio: ${money(p.price)}</small></div><label>Repusiste<input type="number" min="0" step="1" value="0" data-restock="${p.id}"></label><label>Quedan<input type="number" min="0" step="1" value="${p.stock}" data-closing="${p.id}"></label></div>`}).join('')||'<p class="empty">Primero agrega tus productos en Inventario.</p>';
- $('#daily-opening-cash').value=previous?previous.closingCash:'';
- $('#daily-results').innerHTML=previous?`<div class="panel"><h3>Último cierre · ${new Date(previous.created).toLocaleDateString('es-PA')}</h3><p>Caja registrada: <b>${money(previous.closingCash)}</b> · Diferencia pendiente: <b>${money(previous.unidentified)}</b></p></div>`:'';
- $('#daily-history').innerHTML=db.dailyClosings.length?db.dailyClosings.slice().reverse().map(x=>`<div class="daily-history-row"><div><b>${new Date(x.created).toLocaleDateString('es-PA')}</b><small>${x.products.reduce((a,p)=>a+p.sold,0)} unidades vendidas estimadas · ${esc(x.note||'Sin notas')}</small></div><div><b>${money(x.closingCash)}</b><small>Diferencia: ${money(x.unidentified)}</small></div></div>`).join(''):'Todavía no hay cierres registrados.';
+ fields.innerHTML=db.products.map(p=>{
+  const old=previous?.products?.find(x=>x.id===p.id),opening=old?old.closing:p.stock;
+  return `<div class="daily-product-row" data-product="${p.id}"><div class="daily-product-name"><b>${esc(p.name)}</b><small>Había: <strong>${opening}</strong> · Precio: ${money(p.price)} · Costo: ${money(p.cost)}</small></div><label>Trajiste de la capital<input type="number" min="0" step="1" value="0" data-restock="${p.id}"></label><label>Quedan ahora<input type="number" min="0" step="1" value="${opening}" data-closing="${p.id}"></label></div>`
+ }).join('')||'<p class="empty">Primero agrega tus productos en Inventario.</p>';
+ $('#daily-results').innerHTML=previous?dailyStatsMarkup(previous,true):'<p class="empty">Tu primer cierre aparecerá aquí con las estadísticas del día.</p>';
+ $('#daily-history').innerHTML=db.dailyClosings.length?db.dailyClosings.slice().reverse().map(x=>`<div class="daily-history-row"><div><b>${new Date(x.created).toLocaleDateString('es-PA')}</b><small>${x.products.reduce((a,p)=>a+p.sold,0)} unidades vendidas · ${esc(x.note||'Cierre diario')}</small></div><div><b>${money(x.revenue||0)}</b><small>Ganancia: ${money(x.profit||0)}</small></div></div>`).join(''):'Todavía no hay cierres registrados.';
+}
+function dailyStatsMarkup(entry,previous=false){
+ const products=entry.products||[],sold=products.reduce((a,p)=>a+(p.sold||0),0);
+ const rows=products.filter(p=>p.sold>0).sort((a,b)=>b.revenue-a.revenue).map(p=>`<div class="daily-stat-row"><span><b>${esc(p.name)}</b><small>${p.sold} vendidos × ${money(p.price)}</small></span><strong>${money(p.revenue)}</strong></div>`).join('');
+ return `<div class="daily-stats"><div class="daily-stats-head"><span class="eyebrow">${previous?'ÚLTIMO CIERRE':'CIERRE GUARDADO'}</span><h3>${new Date(entry.created).toLocaleDateString('es-PA',{dateStyle:'full'})}</h3></div><div class="daily-result-grid"><article><small>Venta estimada</small><b>${money(entry.revenue||0)}</b></article><article><small>Ganancia estimada</small><b>${money(entry.profit||0)}</b></article><article><small>Unidades vendidas</small><b>${sold}</b></article><article><small>Reposición</small><b>${(entry.products||[]).reduce((n,p)=>n+(p.restock||0),0)} unidades</b></article></div><div class="daily-stat-list"><h4>¿Qué vendiste?</h4>${rows||'<p class="empty">No se registraron ventas estimadas en este cierre.</p>'}</div><div class="daily-stat-footer">Inventario guardado automáticamente para el próximo cierre ♡</div></div>`;
 }
 $('#daily-form').onsubmit=e=>{
- e.preventDefault();
- const previous=db.dailyClosings.at(-1),openingCash=Number($('#daily-opening-cash').value),closingCash=Number($('#daily-closing-cash').value),extraIn=Number($('#daily-extra-in').value)||0,extraOut=Number($('#daily-extra-out').value)||0;
- if(!Number.isFinite(openingCash)||!Number.isFinite(closingCash)||openingCash<0||closingCash<0)return toast('Revisa los valores de caja');
- const products=db.products.map(p=>{const old=previous?.products?.find(x=>x.id===p.id),opening=old?old.closing:p.stock,restock=Number($('[data-restock="'+p.id+'"]').value)||0,closing=Number($('[data-closing="'+p.id+'"]').value);if(!Number.isInteger(restock)||restock<0||!Number.isInteger(closing)||closing<0)throw new Error('Revisa las cantidades de '+p.name);const sold=Math.max(0,opening+restock-closing);return {id:p.id,name:p.name,cost:p.cost,price:p.price,opening,restock,closing,sold,revenue:sold*p.price,restockCost:restock*p.cost,profit:sold*(p.price-p.cost)}});
- const revenue=products.reduce((a,p)=>a+p.revenue,0),restockCost=products.reduce((a,p)=>a+p.restockCost,0),expected=openingCash+revenue+extraIn-restockCost-extraOut,unidentified=closingCash-expected;
- const entry={id:crypto.randomUUID(),created:new Date().toISOString(),openingCash,closingCash,extraIn,extraOut,revenue,restockCost,expected,unidentified,profit:products.reduce((a,p)=>a+p.profit,0),products,note:$('#daily-note').value.trim()};
- db.dailyClosings.push(entry);products.forEach(x=>{const p=db.products.find(p=>p.id===x.id);if(p)p.stock=x.closing});
- save();$('#daily-closing-cash').value='';$('#daily-extra-in').value='0';$('#daily-extra-out').value='0';$('#daily-note').value='';renderDaily();
- $('#daily-results').innerHTML=`<div class="daily-result-grid"><article><small>Ventas estimadas</small><b>${money(revenue)}</b></article><article><small>Ganancia estimada</small><b>${money(entry.profit)}</b></article><article><small>Reposiciones</small><b>${money(restockCost)}</b></article><article><small>Ingreso sin identificar</small><b>${money(unidentified)}</b><small>Puede incluir pasiva, ajustes u otros movimientos.</small></article></div>`;
- toast('Cierre diario guardado ♡');
+ e.preventDefault();const previous=db.dailyClosings.at(-1);
+ try{
+  const products=db.products.map(p=>{
+   const old=previous?.products?.find(x=>x.id===p.id),opening=old?old.closing:p.stock;
+   const restock=Number($('[data-restock="'+p.id+'"]').value),closing=Number($('[data-closing="'+p.id+'"]').value);
+   if(!Number.isInteger(restock)||restock<0||!Number.isInteger(closing)||closing<0)throw Error('Revisa las cantidades de '+p.name);
+   const available=opening+restock;if(closing>available)throw Error('Quedan más unidades de '+p.name+' de las que había más la reposición.');
+   const sold=available-closing;
+   return {id:p.id,name:p.name,cost:p.cost,price:p.price,opening,restock,closing,sold,revenue:sold*p.price,restockCost:restock*p.cost,profit:sold*(p.price-p.cost)};
+  });
+  const revenue=products.reduce((n,p)=>n+p.revenue,0),restockCost=products.reduce((n,p)=>n+p.restockCost,0),profit=products.reduce((n,p)=>n+p.profit,0);
+  const entry={id:crypto.randomUUID(),created:new Date().toISOString(),revenue,restockCost,profit,products,note:$('#daily-note').value.trim()};
+  db.dailyClosings.push(entry);products.forEach(x=>{const p=db.products.find(p=>p.id===x.id);if(p)p.stock=x.closing});
+  save();$('#daily-note').value='';renderDaily();$('#daily-results').innerHTML=dailyStatsMarkup(entry);toast('Cierre diario guardado ♡');
+ }catch(err){toast(err.message||'Revisa las cantidades ingresadas')}
 };
 
 // Calculadora
