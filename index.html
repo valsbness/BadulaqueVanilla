@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f7eee5"><title>Badulaque Vanilla</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">V</div><div><b>BADULAQUE</b><small>VANILLA</small></div></div>
+  <nav>
+    <button class="nav active" data-page="dashboard">⌂ <span>Resumen</span></button>
+    <button class="nav" data-page="calculator">＋ <span>Calculadora</span></button>
+    <button class="nav" data-page="inventory">▦ <span>Inventario</span></button>
+    <button class="nav" data-page="events">✧ <span>Eventos y ruleta</span></button>
+  </nav>
+  <div class="side-note">Tu negocio, en orden.<br><span>Un día a la vez ♡</span></div>
+</aside>
+<main class="main">
+<header class="topbar"><div><span class="eyebrow">PANEL DE CONTROL</span><h1 id="page-title">Resumen</h1></div><div class="today" id="today"></div></header>
+<section id="dashboard" class="page active">
+  <div class="welcome"><div><span class="eyebrow">BADULAQUE VANILLA</span><h2>¡Hola! ♡</h2><p>Este es el resumen de tu negocio.</p></div><div class="welcome-icon">🍦</div></div>
+  <div class="stats">
+    <article class="stat"><span>Ventas de hoy</span><strong id="day-sales">$0.00</strong><small>Dinero recibido</small></article>
+    <article class="stat"><span>Ganancia estimada</span><strong id="day-profit">$0.00</strong><small>Después del costo</small></article>
+    <article class="stat"><span>Productos en inventario</span><strong id="product-count">0</strong><small>Productos registrados</small></article>
+    <article class="stat"><span>Unidades disponibles</span><strong id="unit-count">0</strong><small>Existencias actuales</small></article>
+  </div>
+  <div class="panel"><div class="panel-head"><div><h3>Actividad de hoy</h3><p>Registro de ventas del día</p></div><button class="soft" data-go="inventory">Ir al inventario →</button></div><div id="recent-sales" class="empty">Todavía no hay ventas registradas hoy.</div></div>
+</section>
+<section id="calculator" class="page">
+ <div class="calc-layout"><div class="panel calculator"><div class="panel-head"><div><h3>Calculadora</h3><p>Operaciones convencionales</p></div></div>
+ <input id="calc-display" class="calc-display" value="0" readonly aria-label="Pantalla de calculadora">
+ <div class="keys">
+  <button data-key="AC" class="key muted">AC</button><button data-key="±" class="key muted">±</button><button data-key="%" class="key muted">%</button><button data-key="/" class="key operator">÷</button>
+  <button data-key="7" class="key">7</button><button data-key="8" class="key">8</button><button data-key="9" class="key">9</button><button data-key="*" class="key operator">×</button>
+  <button data-key="4" class="key">4</button><button data-key="5" class="key">5</button><button data-key="6" class="key">6</button><button data-key="-" class="key operator">−</button>
+  <button data-key="1" class="key">1</button><button data-key="2" class="key">2</button><button data-key="3" class="key">3</button><button data-key="+" class="key operator">+</button>
+  <button data-key="0" class="key zero">0</button><button data-key="." class="key">.</button><button data-key="=" class="key equals">=</button>
+ </div></div><div class="hint-card"><div class="hint-icon">✧</div><h3>Una cuenta rápida</h3><p>Usa la calculadora para tus operaciones del día. Tus ventas e inventario se guardan por separado.</p></div></div>
+</section>
+<section id="inventory" class="page">
+ <div class="stats compact">
+  <article class="stat"><span>Capital invertido</span><strong id="capital">$0.00</strong><small>Existencias × costo</small></article>
+  <article class="stat"><span>Valor de venta disponible</span><strong id="stock-value">$0.00</strong><small>Existencias × precio</small></article>
+  <article class="stat"><span>Ventas acumuladas</span><strong id="all-sales">$0.00</strong><small>Desde que comenzaste</small></article>
+ </div>
+ <div class="panel">
+  <div class="panel-head"><div><h3>Productos</h3><p>Agrega productos y actualiza sus existencias</p></div><button class="primary" id="add-product">＋ Agregar producto</button></div>
+  <div class="table-wrap"><table><thead><tr><th>Producto</th><th>Costo</th><th>Venta</th><th>Disponible</th><th>Acciones</th></tr></thead><tbody id="product-rows"></tbody></table></div>
+  <div id="inventory-empty" class="empty">Aún no agregas productos. Cuando me indiques qué vendes, podrás registrarlos aquí.</div>
+ </div>
+ <div class="panel"><div class="panel-head"><div><h3>Registrar una venta</h3><p>Descuenta automáticamente del inventario</p></div></div>
+ <form id="sale-form" class="form-grid"><label>Producto<select id="sale-product" required></select></label><label>Cantidad<input id="sale-quantity" type="number" min="1" step="1" value="1" required></label><label class="sale-total">Total estimado<strong id="sale-estimate">$0.00</strong></label><button class="primary" type="submit">Registrar venta</button></form></div>
+ <div class="panel"><div class="panel-head"><div><h3>Historial de ventas</h3><p>Detalle de las ventas registradas</p></div></div><div id="sales-history" class="empty">Todavía no hay ventas registradas.</div></div>
+</section>
+<section id="events" class="page">
+ <div class="welcome event-welcome"><div><span class="eyebrow">SORTEOS Y PREMIOS</span><h2>Un evento especial ✨</h2><p>Cada evento tiene su propia lista de participantes y su propia ruleta.</p></div><div class="welcome-icon">🎁</div></div>
+ <div class="panel"><div class="panel-head"><div><h3>Crear evento</h3><p>Configura el premio y comienza a registrar participantes</p></div></div>
+ <form id="event-form" class="form-grid event-form"><label>Título del evento<input id="event-title" placeholder="Ej. Sorteo Vanilla" required></label><label>Premio<input id="event-prize" placeholder="Ej. Canasta sorpresa" required></label><label class="full">Foto del premio<input id="event-image" type="file" accept="image/*"></label><button class="primary" type="submit">＋ Crear evento</button></form></div>
+ <div class="event-grid"><div class="panel"><div class="panel-head"><div><h3>Eventos guardados</h3><p>Selecciona un evento para administrarlo</p></div></div><div id="event-list" class="empty">Todavía no hay eventos.</div></div>
+ <div class="panel"><div class="panel-head"><div><h3>Participantes</h3><p id="selected-event-label">Selecciona o crea un evento</p></div></div>
+ <form id="participant-form" class="form-grid one-col"><label>Nombre del participante<input id="participant-name" placeholder="Juan Felipe" required></label><label>Número celular<input id="participant-phone" type="tel" placeholder="6000-0000" required></label><label>Cantidad de números<input id="participant-quantity" type="number" min="1" max="500" value="1" required></label><button class="primary" type="submit" id="add-participant" disabled>Agregar participaciones</button></form>
+ <div id="participant-list" class="empty">Selecciona un evento para ver sus participantes.</div></div></div>
+ <div class="panel wheel-panel"><div class="panel-head"><div><h3>Ruleta del evento</h3><p>Todos los números participan por igual</p></div><span class="pill" id="ticket-count">0 participaciones</span></div>
+ <div class="wheel-area"><div class="wheel-pointer">▼</div><div class="wheel" id="wheel"><span>VANILLA</span></div></div><button class="primary spin" id="spin-button" disabled>✦ GIRAR LA RULETA</button><div id="winner" class="winner hidden"></div></div>
+</section>
+<footer>BADULAQUE VANILLA <span>Hecho con cariño ♡</span></footer>
+</main></div>
+<div class="modal-backdrop hidden" id="product-modal"><form class="modal" id="product-form"><div class="panel-head"><div><h3 id="product-modal-title">Agregar producto</h3><p>Completa la información del producto</p></div><button type="button" class="icon-btn" data-close="product-modal">×</button></div><input type="hidden" id="product-id"><label>Nombre del producto<input id="product-name" required placeholder="Nombre"></label><div class="form-grid"><label>Precio de costo<input id="product-cost" type="number" min="0" step="0.01" required placeholder="0.00"></label><label>Precio de venta<input id="product-price" type="number" min="0" step="0.01" required placeholder="0.00"></label><label>Cantidad disponible<input id="product-stock" type="number" min="0" step="1" required placeholder="0"></label></div><div class="modal-actions"><button type="button" class="soft" data-close="product-modal">Cancelar</button><button class="primary" type="submit">Guardar producto</button></div></form></div>
+<div class="modal-backdrop hidden" id="winner-modal"><div class="modal winner-modal"><div class="confetti" aria-hidden="true">🎉 ✨ 🎊 ✨ 🎉</div><span class="eyebrow">¡TENEMOS GANADOR!</span><img id="winner-image" class="prize-image hidden" alt="Premio del evento"><h2 id="winner-name"></h2><p id="winner-prize"></p><button class="primary" data-close="winner-modal">¡Qué emoción! ♡</button></div></div>
+<div id="toast" class="toast"></div>
+<script src="app.js"></script>
+</body></html>
