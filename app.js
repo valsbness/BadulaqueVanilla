@@ -1,4 +1,4 @@
-const $=s=>document.querySelector(s), $=s=>[...document.querySelectorAll(s)];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 
 const SUPABASE_URL='https://okxdhbteqgjwjugwuljm.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_hfDtRFUYMR3TonqbFHQ7dg_ZPSXPb4M';
