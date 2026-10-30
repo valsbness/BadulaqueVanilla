@@ -56,16 +56,17 @@
  <div class="panel daily-callout"><h3>♡ ¿Terminaste tu jornada?</h3><p>Registra caja e inventario desde Cierre diario. No necesitas anotar cada venta.</p><button class="primary" data-go="daily">Ir al cierre diario →</button></div>
 </section>
 <section id="daily" class="page">
- <div class="welcome"><div><span class="eyebrow">CONTROL DEL NEGOCIO</span><h2>Tu cierre diario ♡</h2><p>Solo actualiza lo que quedó y lo que trajiste. Las ventas y estadísticas se calculan solas.</p></div><div class="welcome-icon">🧾</div></div>
- <div class="panel"><div class="panel-head"><div><h3>Actualizar inventario de hoy</h3><p>La cantidad inicial se recupera del cierre anterior automáticamente.</p></div><span class="pill">Sin registrar ventas</span></div>
+ <div class="welcome"><div><span class="eyebrow">CONTROL DEL NEGOCIO</span><h2>Capital e inventario ♡</h2><p>Ingresa el dinero real de caja y las cantidades actuales. La página comprobará si todo cuadra.</p></div><div class="welcome-icon">🧾</div></div>
+ <div class="panel"><div class="panel-head"><div><h3>1. Capital en caja</h3><p>Escribe cuánto dinero tienes contado ahora mismo.</p></div><span class="pill">Control de caja</span></div>
  <form id="daily-form" class="daily-form">
-  <div class="daily-products-head"><h3>Productos</h3><p>Indica cuántos trajiste y cuántos quedan al cerrar.</p></div>
+  <div class="cash-entry"><label>Dinero actual en caja ($)<input id="cash-counted" type="number" min="0" step="0.01" placeholder="Ej. 180.00" required></label><div class="cash-previous" id="cash-previous">Primera vez: registra tu capital inicial.</div></div>
+  <div class="daily-products-head"><h3>2. Inventario (INV)</h3><p>Indica lo que compraste para reponer y cuánto queda ahora. Las ventas se calculan por la diferencia.</p></div>
   <div id="daily-product-fields" class="daily-product-fields"></div>
-  <label class="daily-note">Nota del día (opcional)<textarea id="daily-note" rows="2" placeholder="Ej. reposición de la capital, ajuste de inventario…"></textarea></label>
-  <button class="primary" type="submit">♡ Calcular y guardar cierre</button>
+  <label class="daily-note">Nota del movimiento (opcional)<textarea id="daily-note" rows="2" placeholder="Ej. ventas del día, compra de mercancía…"></textarea></label>
+  <button class="primary" type="submit">♡ Comprobar y guardar registro</button>
  </form></div>
  <div class="daily-results" id="daily-results"></div>
- <div class="panel"><div class="panel-head"><div><h3>Historial de cierres</h3><p>Ventas estimadas y ganancias calculadas en cada jornada.</p></div></div><div id="daily-history" class="daily-history empty">Todavía no hay cierres registrados.</div></div>
+ <div class="panel"><div class="panel-head"><div><h3>Historial de caja e inventario</h3><p>Los registros que cuadran y las diferencias quedarán identificados.</p></div></div><div id="daily-history" class="daily-history empty">Todavía no hay registros.</div></div>
 </section>
 <section  class="page">
  <div class="raffle-hero"><div class="raffle-hero-copy"><span class="eyebrow">BADULAQUE VANILLA · MOMENTOS ESPECIALES</span><h2>Un poquito de suerte ✨</h2><p>Crea tus sorteos, agrega participantes y celebra cada ganador con una ruleta especial.</p><div class="raffle-hero-stats"><span><b id="raffle-total">0</b><small>Sorteos creados</small></span><span><b id="raffle-participants">0</b><small>Participaciones</small></span></div></div><div class="raffle-hero-art"><div class="raffle-orbit orbit-one"></div><div class="raffle-orbit orbit-two"></div><div class="raffle-gift">🎁</div><span class="sparkle sparkle-a">✦</span><span class="sparkle sparkle-b">✧</span><span class="sparkle sparkle-c">✿</span></div></div>
