@@ -12,7 +12,7 @@ const KEY='badulaque_vanilla_v1';
 let db=JSON.parse(localStorage.getItem(KEY)||'{"products":[],"sales":[],"events":[],"dailyClosings":[]}');
 db.dailyClosings ||= []; db.sales ||= []; db.products ||= []; db.events ||= [];
 let profile=JSON.parse(localStorage.getItem('badulaque_vanilla_profile')||'{"name":"Mi perfil","photo":""}');
-let selectedEvent=null,pendingDeleteEvent=null,calcValue='0',calcStored=null,calcOp=null,calcFresh=false,wheelRotation=0;
+let selectedEvent=null,pendingDeleteEvent=null,editingDailyId=null,calcValue='0',calcStored=null,calcOp=null,calcFresh=false,wheelRotation=0;
 const money=n=>new Intl.NumberFormat('es-PA',{style:'currency',currency:'USD'}).format(Number(n)||0);
 const save=()=>{localStorage.setItem(KEY,JSON.stringify(db));renderAll();syncCloud()};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -26,14 +26,15 @@ $('#cancel-delete-event').onclick=()=>{pendingDeleteEvent=null;$('#confirm-delet
 $('#confirm-delete-modal').addEventListener('click',e=>{if(e.target.id==='confirm-delete-modal'){$('#cancel-delete-event').click()}});
 $('#confirm-delete-event').onclick=()=>{if(!pendingDeleteEvent)return;const id=pendingDeleteEvent;pendingDeleteEvent=null;db.events=db.events.filter(x=>x.id!==id);if(selectedEvent===id)selectedEvent=db.events.at(-1)?.id||null;$('#confirm-delete-modal').classList.add('hidden');save();toast('Sorteo eliminado ♡')};
 $('#event-image').addEventListener('change',e=>{$('#event-file-name').textContent=e.target.files[0]?.name||'Ningún archivo seleccionado'});
-function renderAll(){renderDashboard();renderProducts();renderEvents();renderDaily()}
+function renderAll(){renderDashboard();renderProducts();renderEvents();renderDaily();renderGreeting()}
+function renderGreeting(){const name=(profile.name||'').trim().split(/\\s+/)[0];const el=$('#dashboard-greeting');if(el)el.textContent=name?'¡Hola, '+name+'! ♡':'¡Hola! ♡'}
 function renderProfile(){const name=profile.name||'Mi perfil',avatar=profile.photo?`<img src="${profile.photo}" alt="Foto de perfil">`:esc(name.trim().charAt(0).toUpperCase()||'♡');$('#profile-name').textContent=name;$('#profile-avatar').innerHTML=avatar;$('#profile-preview').innerHTML=avatar;$('#profile-name-input').value=name}
 function openProfile(){renderProfile();$('#profile-backdrop').classList.remove('hidden')}
 $('#profile-edit').onclick=openProfile;$('#profile-close').onclick=()=>$('#profile-backdrop').classList.add('hidden');$('#profile-backdrop').addEventListener('click',e=>{if(e.target.id==='profile-backdrop')e.currentTarget.classList.add('hidden')});
 async function imageToDataUrl(file,maxBytes=1.4*1024*1024){if(!file.type.startsWith('image/'))throw new Error('Selecciona una imagen válida');if(file.size<=maxBytes)return await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)});const bitmap=await createImageBitmap(file);const scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));const ctx=canvas.getContext('2d');ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();for(const quality of [.86,.76,.66,.56,.46]){const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',quality));if(blob&&blob.size<=maxBytes)return await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(blob)})}throw new Error('La imagen es demasiado grande para comprimirla automáticamente')}
 $('#profile-photo').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{const image=await imageToDataUrl(file);profile.photo=image;renderProfile();$('#profile-file-name').textContent=file.name+' (optimizada)';syncCloud()}catch(err){e.target.value='';toast(err.message||'No se pudo procesar la imagen')}});
 $('#profile-remove-photo').onclick=()=>{profile.photo='';$('#profile-photo').value='';$('#profile-file-name').textContent='Foto eliminada';renderProfile()};
-$('#profile-form').onsubmit=e=>{e.preventDefault();const name=$('#profile-name-input').value.trim();if(!name)return toast('Escribe un nombre para tu perfil');profile.name=name;localStorage.setItem('badulaque_vanilla_profile',JSON.stringify(profile));syncCloud();renderProfile();$('#profile-backdrop').classList.add('hidden');toast('Perfil guardado ♡')};
+$('#profile-form').onsubmit=e=>{e.preventDefault();const name=$('#profile-name-input').value.trim();if(!name)return toast('Escribe un nombre para tu perfil');profile.name=name;renderGreeting();localStorage.setItem('badulaque_vanilla_profile',JSON.stringify(profile));syncCloud();renderProfile();$('#profile-backdrop').classList.add('hidden');toast('Perfil guardado ♡')};
 
 function renderDashboard(){
  const today=new Date().toLocaleDateString('en-CA'),sales=db.sales.filter(s=>s.date===today);
@@ -64,15 +65,16 @@ function renderDaily(){
   return `<div class="daily-product-row" data-product="${p.id}"><div class="daily-product-name"><b>${esc(p.name)}</b><small>Había: <strong>${opening}</strong> · Precio: ${money(p.price)} · Costo: ${money(p.cost)}</small></div><label>Trajiste de la capital<input type="number" min="0" step="1" value="0" data-restock="${p.id}"></label><label>Quedan ahora<input type="number" min="0" step="1" value="${opening}" data-closing="${p.id}"></label></div>`
  }).join('')||'<p class="empty">Primero agrega tus productos en Inventario.</p>';
  $('#daily-results').innerHTML=previous?dailyStatsMarkup(previous,true):'<p class="empty">Tu primer cierre aparecerá aquí con las estadísticas del día.</p>';
- $('#daily-history').innerHTML=db.dailyClosings.length?db.dailyClosings.slice().reverse().map(x=>`<div class="daily-history-row"><div><b>${new Date(x.created).toLocaleDateString('es-PA')}</b><small>${x.products.reduce((a,p)=>a+p.sold,0)} unidades vendidas · ${esc(x.note||'Cierre diario')}</small></div><div><b>${money(x.revenue||0)}</b><small>Ganancia: ${money(x.profit||0)}</small></div></div>`).join(''):'Todavía no hay cierres registrados.';
+ $('#daily-history').innerHTML=db.dailyClosings.length?db.dailyClosings.slice().reverse().map((x,i)=>`<div class="daily-history-row"><div><b>${new Date(x.created).toLocaleDateString('es-PA')}</b><small>${x.products.reduce((a,p)=>a+p.sold,0)} unidades vendidas · ${esc(x.note||'Cierre diario')}</small></div><div><b>${money(x.revenue||0)}</b><small>Ganancia: ${money(x.profit||0)}</small>${i===0?`<button type="button" class="action" data-edit-daily="${x.id}">Ajustar cantidades</button>`:''}</div></div>`).join(''):'Todavía no hay cierres registrados.';
 }
+$('#daily-history').addEventListener('click',e=>{const b=e.target.closest('[data-edit-daily]');if(!b)return;const entry=db.dailyClosings.at(-1);if(!entry||entry.id!==b.dataset.editDaily)return;editingDailyId=entry.id;const previous=db.dailyClosings.at(-2);$('#daily-product-fields').innerHTML=db.products.map(p=>{const saved=entry.products.find(x=>x.id===p.id),opening=previous?.products?.find(x=>x.id===p.id)?.closing??saved?.opening??0;return `<div class="daily-product-row"><div class="daily-product-name"><b>${esc(p.name)}</b><small>Había: ${opening}</small></div><label>Trajiste de la capital<input type="number" min="0" step="1" value="${saved?.restock??0}" data-restock="${p.id}"></label><label>Quedan ahora<input type="number" min="0" step="1" value="${saved?.closing??0}" data-closing="${p.id}"></label></div>`}).join('');$('#daily-note').value=entry.note||'';$('#daily-form button[type="submit"]').textContent='♡ Guardar corrección';$('#daily-form').scrollIntoView({behavior:'smooth',block:'start'});toast('Corrige las cantidades y guarda');});
 function dailyStatsMarkup(entry,previous=false){
  const products=entry.products||[],sold=products.reduce((a,p)=>a+(p.sold||0),0);
  const rows=products.filter(p=>p.sold>0).sort((a,b)=>b.revenue-a.revenue).map(p=>`<div class="daily-stat-row"><span><b>${esc(p.name)}</b><small>${p.sold} vendidos × ${money(p.price)}</small></span><strong>${money(p.revenue)}</strong></div>`).join('');
  return `<div class="daily-stats"><div class="daily-stats-head"><span class="eyebrow">${previous?'ÚLTIMO CIERRE':'CIERRE GUARDADO'}</span><h3>${new Date(entry.created).toLocaleDateString('es-PA',{dateStyle:'full'})}</h3></div><div class="daily-result-grid"><article><small>Venta estimada</small><b>${money(entry.revenue||0)}</b></article><article><small>Ganancia estimada</small><b>${money(entry.profit||0)}</b></article><article><small>Unidades vendidas</small><b>${sold}</b></article><article><small>Reposición</small><b>${(entry.products||[]).reduce((n,p)=>n+(p.restock||0),0)} unidades</b></article></div><div class="daily-stat-list"><h4>¿Qué vendiste?</h4>${rows||'<p class="empty">No se registraron ventas estimadas en este cierre.</p>'}</div><div class="daily-stat-footer">Inventario guardado automáticamente para el próximo cierre ♡</div></div>`;
 }
 $('#daily-form').onsubmit=e=>{
- e.preventDefault();const previous=db.dailyClosings.at(-1);
+ e.preventDefault();const previous=editingDailyId?db.dailyClosings.at(-2):db.dailyClosings.at(-1);
  try{
   const products=db.products.map(p=>{
    const old=previous?.products?.find(x=>x.id===p.id),opening=old?old.closing:p.stock;
@@ -84,8 +86,8 @@ $('#daily-form').onsubmit=e=>{
   });
   const revenue=products.reduce((n,p)=>n+p.revenue,0),restockCost=products.reduce((n,p)=>n+p.restockCost,0),profit=products.reduce((n,p)=>n+p.profit,0);
   const entry={id:crypto.randomUUID(),created:new Date().toISOString(),revenue,restockCost,profit,products,note:$('#daily-note').value.trim()};
-  db.dailyClosings.push(entry);products.forEach(x=>{const p=db.products.find(p=>p.id===x.id);if(p)p.stock=x.closing});
-  save();$('#daily-note').value='';renderDaily();$('#daily-results').innerHTML=dailyStatsMarkup(entry);toast('Cierre diario guardado ♡');
+  if(editingDailyId){const idx=db.dailyClosings.findIndex(x=>x.id===editingDailyId);if(idx>=0){entry.id=editingDailyId;entry.created=db.dailyClosings[idx].created;db.dailyClosings[idx]=entry;}}else db.dailyClosings.push(entry);editingDailyId=null;products.forEach(x=>{const p=db.products.find(p=>p.id===x.id);if(p)p.stock=x.closing});
+  save();$('#daily-note').value='';$('#daily-form button[type="submit"]').textContent='♡ Calcular y guardar cierre';renderDaily();$('#daily-results').innerHTML=dailyStatsMarkup(entry);toast('Cierre diario guardado ♡');
  }catch(err){toast(err.message||'Revisa las cantidades ingresadas')}
 };
 
