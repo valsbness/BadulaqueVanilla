@@ -11,16 +11,17 @@
   <div class="brand"><div class="brand-mark">V</div><div><b>BADULAQUE</b><small>VANILLA</small></div></div>
   <nav>
     <button class="nav active" data-page="dashboard">⌂ <span>Resumen</span></button>
-    <button class="nav" data-page="calculator">＋ <span>Calculadora</span></button>
+    <button class="nav" data-page="calculator">▦ <span>Mostrador</span></button>
+    <button class="nav" data-page="daily">♡ <span>Cierre diario</span></button>
     <button class="nav" data-page="inventory">▦ <span>Inventario</span></button>
     <button class="nav" data-page="events">✧ <span>Eventos y ruleta</span></button>
   </nav>
-  <div class="side-note">Tu negocio, en orden.<br><span>Un día a la vez ♡</span></div>
+  <button class="theme-launch" id="theme-launch" type="button">✿ Personalizar tienda</button><div class="side-note">Tu negocio, en orden.<br><span>Un día a la vez ♡</span></div>
 </aside>
 <main class="main">
 <header class="topbar"><div><span class="eyebrow">PANEL DE CONTROL</span><h1 id="page-title">Resumen</h1></div><div class="today" id="today"></div></header>
 <section id="dashboard" class="page active">
-  <div class="welcome"><div><span class="eyebrow">BADULAQUE VANILLA</span><h2>¡Hola! ♡</h2><p>Este es el resumen de tu negocio.</p></div><div class="welcome-icon">🍦</div></div>
+  <div class="welcome"><div><span class="eyebrow">BADULAQUE VANILLA</span><h2>¡Hola! ♡</h2><p>Este es el resumen de tu negocio.</p></div><div class="welcome-icon plant-pot" aria-label="Planta decorativa"><span class="leaf leaf-one">❧</span><span class="leaf leaf-two">❧</span><span class="leaf leaf-three">❧</span><span class="pot">♡</span></div></div>
   <div class="stats">
     <article class="stat"><span>Ventas de hoy</span><strong id="day-sales">$0.00</strong><small>Dinero recibido</small></article>
     <article class="stat"><span>Ganancia estimada</span><strong id="day-profit">$0.00</strong><small>Después del costo</small></article>
@@ -30,7 +31,7 @@
   <div class="panel"><div class="panel-head"><div><h3>Actividad de hoy</h3><p>Registro de ventas del día</p></div><button class="soft" data-go="inventory">Ir al inventario →</button></div><div id="recent-sales" class="empty">Todavía no hay ventas registradas hoy.</div></div>
 </section>
 <section id="calculator" class="page">
- <div class="calc-layout"><div class="panel calculator"><div class="panel-head"><div><h3>Calculadora</h3><p>Operaciones convencionales</p></div></div>
+ <div class="counter-scene" id="counter-scene"><div class="counter-shelf"><span class="counter-label">VANILLA MARKET</span><span class="cash-deco cash-one" data-float>＄</span><span class="cash-deco cash-two" data-float>✧</span><span class="coin-deco coin-one" data-float>●</span><span class="coin-deco coin-two" data-float>＄</span><div class="counter-plant">🌿</div></div><div class="calc-layout"><div class="panel calculator iphone-calculator"><div class="panel-head"><div><h3>Calculadora</h3><p>Operaciones convencionales</p></div></div>
  <input id="calc-display" class="calc-display" value="0" readonly aria-label="Pantalla de calculadora">
  <div class="keys">
   <button data-key="AC" class="key muted">AC</button><button data-key="±" class="key muted">±</button><button data-key="%" class="key muted">%</button><button data-key="/" class="key operator">÷</button>
@@ -38,7 +39,7 @@
   <button data-key="4" class="key">4</button><button data-key="5" class="key">5</button><button data-key="6" class="key">6</button><button data-key="-" class="key operator">−</button>
   <button data-key="1" class="key">1</button><button data-key="2" class="key">2</button><button data-key="3" class="key">3</button><button data-key="+" class="key operator">+</button>
   <button data-key="0" class="key zero">0</button><button data-key="." class="key">.</button><button data-key="=" class="key equals">=</button>
- </div></div><div class="hint-card"><div class="hint-icon">✧</div><h3>Una cuenta rápida</h3><p>Usa la calculadora para tus operaciones del día. Tus ventas e inventario se guardan por separado.</p></div></div>
+ </div></div><div class="hint-card"><div class="hint-icon">✧</div><h3>Tu mostrador</h3><p>Haz tus cuentas mientras las plantitas y los detalles de la tienda acompañan tu día.</p><div class="counter-tip">♡ Cada detalle cuenta</div></div></div></div>
 </section>
 <section id="inventory" class="page">
  <div class="stats compact">
@@ -51,9 +52,20 @@
   <div class="table-wrap"><table><thead><tr><th>Producto</th><th>Costo</th><th>Venta</th><th>Disponible</th><th>Acciones</th></tr></thead><tbody id="product-rows"></tbody></table></div>
   <div id="inventory-empty" class="empty">Aún no agregas productos. Cuando me indiques qué vendes, podrás registrarlos aquí.</div>
  </div>
- <div class="panel"><div class="panel-head"><div><h3>Registrar una venta</h3><p>Descuenta automáticamente del inventario</p></div></div>
- <form id="sale-form" class="form-grid"><label>Producto<select id="sale-product" required></select></label><label>Cantidad<input id="sale-quantity" type="number" min="1" step="1" value="1" required></label><label class="sale-total">Total estimado<strong id="sale-estimate">$0.00</strong></label><button class="primary" type="submit">Registrar venta</button></form></div>
- <div class="panel"><div class="panel-head"><div><h3>Historial de ventas</h3><p>Detalle de las ventas registradas</p></div></div><div id="sales-history" class="empty">Todavía no hay ventas registradas.</div></div>
+ <div class="panel daily-callout"><h3>♡ ¿Terminaste tu jornada?</h3><p>Registra caja e inventario desde Cierre diario. No necesitas anotar cada venta.</p><button class="primary" data-go="daily">Ir al cierre diario →</button></div>
+</section>
+<section id="daily" class="page">
+ <div class="welcome"><div><span class="eyebrow">CONTROL DEL NEGOCIO</span><h2>Tu cierre diario ♡</h2><p>Compara lo que había al empezar con lo que quedó al terminar.</p></div><div class="welcome-icon">🧾</div></div>
+ <div class="panel"><div class="panel-head"><div><h3>Registrar jornada</h3><p>No registres ventas una por una: solo tus datos de apertura y cierre.</p></div><span class="pill">Resumen diario</span></div>
+ <form id="daily-form" class="daily-form">
+  <div class="daily-cash-grid"><label>Dinero al comenzar ($)<input id="daily-opening-cash" type="number" min="0" step="0.01" required placeholder="0.00"></label><label>Dinero al terminar ($)<input id="daily-closing-cash" type="number" min="0" step="0.01" required placeholder="0.00"></label><label>Otros ingresos (+) ($)<input id="daily-extra-in" type="number" min="0" step="0.01" value="0"></label><label>Retiros/gastos de caja ($)<input id="daily-extra-out" type="number" min="0" step="0.01" value="0"></label></div>
+  <div class="daily-products-head"><h3>Inventario al cierre</h3><p>Indica cuánto queda y cuánto repusiste durante el día.</p></div>
+  <div id="daily-product-fields" class="daily-product-fields"></div>
+  <label class="daily-note">Nota del día (opcional)<textarea id="daily-note" rows="2" placeholder="Ej. llegó mercancía, hubo un ajuste, etc."></textarea></label>
+  <button class="primary" type="submit">♡ Guardar cierre del día</button>
+ </form></div>
+ <div class="daily-results" id="daily-results"></div>
+ <div class="panel"><div class="panel-head"><div><h3>Historial de cierres</h3><p>Seguimiento de caja, ventas estimadas y diferencias.</p></div></div><div id="daily-history" class="daily-history empty">Todavía no hay cierres registrados.</div></div>
 </section>
 <section id="events" class="page">
  <div class="welcome event-welcome"><div><span class="eyebrow">SORTEOS Y PREMIOS</span><h2>Un evento especial ✨</h2><p>Cada evento tiene su propia lista de participantes y su propia ruleta.</p></div><div class="welcome-icon">🎁</div></div>
@@ -70,6 +82,6 @@
 </main></div>
 <div class="modal-backdrop hidden" id="product-modal"><form class="modal" id="product-form"><div class="panel-head"><div><h3 id="product-modal-title">Agregar producto</h3><p>Completa la información del producto</p></div><button type="button" class="icon-btn" data-close="product-modal">×</button></div><input type="hidden" id="product-id"><label>Nombre del producto<input id="product-name" required placeholder="Nombre"></label><div class="form-grid"><label>Precio de costo<input id="product-cost" type="number" min="0" step="0.01" required placeholder="0.00"></label><label>Precio de venta<input id="product-price" type="number" min="0" step="0.01" required placeholder="0.00"></label><label>Cantidad disponible<input id="product-stock" type="number" min="0" step="1" required placeholder="0"></label></div><div class="modal-actions"><button type="button" class="soft" data-close="product-modal">Cancelar</button><button class="primary" type="submit">Guardar producto</button></div></form></div>
 <div class="modal-backdrop hidden" id="winner-modal"><div class="modal winner-modal"><div class="confetti" aria-hidden="true">🎉 ✨ 🎊 ✨ 🎉</div><span class="eyebrow">¡TENEMOS GANADOR!</span><img id="winner-image" class="prize-image hidden" alt="Premio del evento"><h2 id="winner-name"></h2><p id="winner-prize"></p><button class="primary" data-close="winner-modal">¡Qué emoción! ♡</button></div></div>
-<div id="toast" class="toast"></div>
+<div class="theme-backdrop hidden" id="theme-backdrop"><div class="theme-panel"><div class="panel-head"><div><h3>Personaliza tu tienda ♡</h3><p>Elige la atmósfera de Badulaque Vanilla</p></div><button type="button" class="icon-btn" id="theme-close">×</button></div><div class="theme-options"><button type="button" data-theme="natural"><i class="swatches natural"></i><b>Vanilla Natural</b><small>Crema · salvia · madera</small></button><button type="button" data-theme="pink"><i class="swatches pink"></i><b>Vanilla Pink</b><small>Rosa · lavanda · crema</small></button><button type="button" data-theme="sky"><i class="swatches sky"></i><b>Vanilla Sky</b><small>Azul · aqua · blanco</small></button><button type="button" data-theme="dark"><i class="swatches dark"></i><b>Vanilla Dark</b><small>Verde · bronce · oscuro</small></button></div><p class="theme-foot">Tu elección se guarda automáticamente en este dispositivo.</p></div></div><div id="toast" class="toast"></div>
 <script src="app.js"></script>
 </body></html>
