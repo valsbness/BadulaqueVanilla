@@ -16,6 +16,7 @@
     <button class="nav" data-page="daily">♡ <span>Cierre diario</span></button>
     <button class="nav" data-page="inventory">▦ <span>Inventario</span></button>
     <button class="nav" data-page="events">✧ <span>Eventos y ruleta</span></button>
+    <button class="nav" data-page="ads">📢 <span>Anuncios</span></button>
   </nav>
   <button class="theme-launch" id="theme-launch" type="button">✿ Personalizar tienda</button><div class="side-note">Tu negocio, en orden.<br><span>Un día a la vez ♡</span></div>
 </aside>
@@ -68,7 +69,7 @@
  <div class="daily-results" id="daily-results"></div>
  <div class="panel"><div class="panel-head"><div><h3>Historial de caja e inventario</h3><p>Los registros que cuadran y las diferencias quedarán identificados.</p></div></div><div id="daily-history" class="daily-history empty">Todavía no hay registros.</div></div>
 </section>
-<section  class="page">
+<section id="events" class="page">
  <div class="raffle-hero"><div class="raffle-hero-copy"><span class="eyebrow">BADULAQUE VANILLA · MOMENTOS ESPECIALES</span><h2>Un poquito de suerte ✨</h2><p>Crea tus sorteos, agrega participantes y celebra cada ganador con una ruleta especial.</p><div class="raffle-hero-stats"><span><b id="raffle-total">0</b><small>Sorteos creados</small></span><span><b id="raffle-participants">0</b><small>Participaciones</small></span></div></div><div class="raffle-hero-art"><div class="raffle-orbit orbit-one"></div><div class="raffle-orbit orbit-two"></div><div class="raffle-gift">🎁</div><span class="sparkle sparkle-a">✦</span><span class="sparkle sparkle-b">✧</span><span class="sparkle sparkle-c">✿</span></div></div>
  <div class="raffle-create panel"><div class="raffle-section-title"><div><span class="eyebrow">EMPIEZA AQUÍ</span><h3>Prepara un nuevo sorteo</h3><p>Un premio bonito merece una presentación especial.</p></div><span class="raffle-step">01</span></div>
  <form id="event-form" class="form-grid event-form"><label>Título del sorteo<input id="event-title" placeholder="Ej. Sorteo de aniversario" required></label><label>Premio<input id="event-prize" placeholder="Ej. Canasta sorpresa" required></label><label class="full file-upload">Imagen del premio <span class="file-pick">✿ Elegir imagen<input id="event-image" type="file" accept="image/*"></span><small id="event-file-name">Ningún archivo seleccionado</small></label><button class="primary" type="submit">＋ Crear sorteo</button></form></div>
@@ -78,6 +79,22 @@
  <div class="panel raffle-draw-panel"><div class="raffle-section-title"><div><span class="eyebrow">EL GRAN MOMENTO</span><h3>La ruleta de la suerte</h3><p>¡Puedes hacer tantas rondas como quieras! Cada giro elige un ganador nuevo.</p></div><span class="raffle-step">03</span></div><div class="draw-stage"><div class="wheel-area"><div class="wheel-pointer">▼</div><div class="wheel" id="wheel"><span>VANILLA</span></div></div><div class="draw-info"><div class="draw-count"><span class="draw-count-icon">✧</span><b id="draw-ticket-count">0</b><small>números en juego</small></div><p>Todos los números tienen la misma oportunidad. Vuelve a girar para elegir más ganadores.</p><button class="primary spin" id="spin-button" disabled>✦ GIRAR LA RULETA</button><div id="winner" class="winner hidden"></div></div></div><div class="raffle-winners"><div class="raffle-section-title"><div><h3>Ganadores de este sorteo</h3><p>Historial de todas las rondas realizadas.</p></div><span class="pill" id="winner-count">0 ganadores</span></div><div id="winner-history" class="winner-history empty">Todavía no hay ganadores. ¡La primera ronda te espera!</div></div></div>
 </section>
 <footer>BADULAQUE VANILLA <span>Hecho con cariño ♡</span></footer>
+
+<section id="ads" class="page">
+ <div class="ads-hero"><div><span class="eyebrow">BADULAQUE VANILLA · PUBLICIDAD</span><h2>📢 Tus anuncios ♡</h2><p>Copia y pega los anuncios directamente en la ciudad.</p></div><div class="ads-hero-icon">📣</div></div>
+ <div class="ads-grid">
+  <article class="panel ad-card"><div class="ad-card-head"><span class="ad-icon">🌞</span><span class="pill">TIENDA</span></div><h3>¡Buenos días, ciudad!</h3><pre class="ad-copy" id="ad-copy-1">🌞 ¡BUENOS DÍAS, CIUDAD! 🌞
+📻📱 ¡Radios y celulares a buenos precios!
+🏪 ¡Visítanos en BADU. VANILLA!</pre><button class="primary ad-copy-button" type="button" data-copy-ad="ad-copy-1">📋 Copiar anuncio</button></article>
+  <article class="panel ad-card"><div class="ad-card-head"><span class="ad-icon">🍔</span><span class="pill">COMIDA</span></div><h3>¡Que no te gane el hambre!</h3><pre class="ad-copy" id="ad-copy-2">🍔 ¿ESTÁS CASI MURIENDO DE HAMBRE? 🍔
+🔥 ¡Acércate y llénate de comida!
+🏪 BADU. VANILLA ¡Tu hambre tiene solución!</pre><button class="primary ad-copy-button" type="button" data-copy-ad="ad-copy-2">📋 Copiar anuncio</button></article>
+  <article class="panel ad-card"><div class="ad-card-head"><span class="ad-icon">🚗</span><span class="pill">SORTEO</span></div><h3>¡Gran sorteo drift!</h3><pre class="ad-copy" id="ad-copy-3">🚗💨 ¡GRAN SORTEO DE CARRO DRIFT! 💨🚗
+🎟️ ¡Boleto a solo $20,000!
+📞 Llama al (480) 681-5460
+🍀 ¡Participa y gana!</pre><button class="primary ad-copy-button" type="button" data-copy-ad="ad-copy-3">📋 Copiar anuncio</button></article>
+ </div>
+</section>
 </main></div>
 <div class="modal-backdrop hidden" id="product-modal"><form class="modal" id="product-form"><div class="panel-head"><div><h3 id="product-modal-title">Agregar producto</h3><p>Completa la información del producto</p></div><button type="button" class="icon-btn" data-close="product-modal">×</button></div><input type="hidden" id="product-id"><label>Nombre del producto<input id="product-name" required placeholder="Nombre"></label><div class="form-grid"><label>Precio de costo<input id="product-cost" type="number" min="0" step="0.01" required placeholder="0.00"></label><label>Precio de venta<input id="product-price" type="number" min="0" step="0.01" required placeholder="0.00"></label><label>Cantidad disponible<input id="product-stock" type="number" min="0" step="1" required placeholder="0"></label></div><div class="modal-actions"><button type="button" class="soft" data-close="product-modal">Cancelar</button><button class="primary" type="submit">Guardar producto</button></div></form></div>
 <canvas id="confetti-canvas" aria-hidden="true"></canvas><div class="modal-backdrop winner-backdrop hidden" id="winner-modal"><div class="winner-modal"><img id="winner-image" class="prize-image hidden" alt="Premio del evento"><h2 id="winner-name"></h2><p id="winner-prize" class="winner-prize-hidden"></p><button class="primary winner-congrats" data-close="winner-modal">¡FELICIDADES!</button></div></div>
