@@ -38,7 +38,7 @@ $('#daily-history').addEventListener('click',e=>{
 });
 
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
-function showPage(name){$$('.page').forEach(p=>p.classList.toggle('active',p.id===name));$$('.nav').forEach(b=>b.classList.toggle('active',b.dataset.page===name));$('#page-title').textContent=({dashboard:'Resumen',calculator:'Mostrador',daily:'Cierre diario',inventory:'Inventario',events:'Eventos y ruleta'})[name]}
+function showPage(name){$$('.page').forEach(p=>p.classList.toggle('active',p.id===name));$$('.nav').forEach(b=>b.classList.toggle('active',b.dataset.page===name));$('#page-title').textContent=({dashboard:'Resumen',calculator:'Mostrador',daily:'Cierre diario',inventory:'Inventario',events:'Eventos y ruleta',ads:'Anuncios'})[name]}
 $$('.nav').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 $$('[data-go]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.go)));
 $$('[data-close]').forEach(b=>b.addEventListener('click',()=>$('#'+b.dataset.close).classList.add('hidden')));
@@ -172,3 +172,6 @@ $('#theme-backdrop').addEventListener('click',e=>{if(e.target.id==='theme-backdr
 $$('[data-theme]').forEach(b=>b.addEventListener('click',()=>applyTheme(b.dataset.theme)));
 const scene=$('#counter-scene');
 if(scene){scene.addEventListener('pointermove',e=>{const r=scene.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;scene.querySelectorAll('[data-float]').forEach((el,i)=>{el.style.setProperty('--mx',x*(i%2?22:-18)+'px');el.style.setProperty('--my',y*(i%2?16:-12)+'px')})});scene.addEventListener('pointerleave',()=>scene.querySelectorAll('[data-float]').forEach(el=>{el.style.setProperty('--mx','0px');el.style.setProperty('--my','0px')}))}
+
+// Copiar anuncios completos, incluyendo emojis y símbolos.
+$$('[data-copy-ad]').forEach(button=>button.addEventListener('click',async()=>{const text=$('#'+button.dataset.copyAd).textContent;try{await navigator.clipboard.writeText(text);toast('¡Anuncio copiado! Pégalo en la ciudad ♡')}catch(error){const area=document.createElement('textarea');area.value=text;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();const copied=document.execCommand('copy');area.remove();toast(copied?'¡Anuncio copiado! Pégalo en la ciudad ♡':'No se pudo copiar. Selecciona el texto y cópialo.')}}));
